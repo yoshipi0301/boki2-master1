@@ -1,0 +1,303 @@
+/* =========================================
+   基本設定 (Variables & Base)
+   ========================================= */
+:root {
+    --primary-color: #3498db;   /* メインカラー（青） */
+    --success-color: #2ecc71;   /* 正解・成功（緑） */
+    --error-color: #e74c3c;     /* 不正解（赤） */
+    --text-color: #333333;      /* 通常文字色 */
+    --bg-color: #f4f7f6;        /* 背景色（薄いグレー） */
+    --card-bg: #ffffff;         /* カード背景（白） */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* =========================================
+   ヘッダー (Header)
+   ========================================= */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* =========================================
+   レイアウトコンテナ (Container)
+   ========================================= */
+.container {
+    max-width: 600px; /* スマホで見やすい幅に制限 */
+    margin: 20px auto;
+    padding: 0 15px;
+    padding-bottom: 50px;
+}
+
+/* =========================================
+   カードデザイン (Card)
+   ========================================= */
+.card {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* =========================================
+   画面切り替え (Screens)
+   ========================================= */
+.screen {
+    display: none; /* デフォルトは非表示 */
+}
+
+.active-screen {
+    display: block; /* アクティブな画面のみ表示 */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   ホーム画面：チャプターリスト
+   ========================================= */
+.chapter-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.chapter-item:hover {
+    background-color: #f8f9fa;
+}
+
+.chapter-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* =========================================
+   問題画面：戻るボタン
+   ========================================= */
+#back-btn {
+    background-color: transparent;
+    border: none;
+    color: #7f8c8d;
+    padding: 5px 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+#back-btn:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* =========================================
+   問題画面：メインエリア
+   ========================================= */
+.problem-meta {
+    display: flex;
+    justify-content: space-between;
+    color: #95a5a6;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.problem-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 25px;
+    white-space: pre-wrap; /* 改行をそのまま表示 */
+}
+
+/* =========================================
+   選択肢ボタン (Options)
+   ========================================= */
+.option-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 12px;
+    background-color: #fff;
+    border: 2px solid #ecf0f1;
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-color);
+    white-space: pre-wrap; /* 仕訳の改行を見やすく */
+    line-height: 1.4;
+}
+
+.option-btn:hover {
+    border-color: #bdc3c7;
+    background-color: #f9f9f9;
+}
+
+/* 選択中のスタイル */
+.option-btn.selected {
+    border-color: var(--primary-color);
+    background-color: #ebf5fb;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* =========================================
+   回答ボタン & 結果表示
+   ========================================= */
+#answer-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+#answer-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+#answer-btn:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+/* =========================================
+   解説エリア & 正誤判定色
+   ========================================= */
+#result-section {
+    margin-top: 25px;
+    animation: fadeIn 0.3s;
+}
+
+.explanation-box {
+    background-color: #f8f9fa;
+    border-left: 5px solid var(--primary-color);
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+/* 正解時のボタン変化 */
+.correct-highlight {
+    background-color: #d4edda !important;
+    border-color: var(--success-color) !important;
+    color: #155724 !important;
+}
+
+/* 不正解時のボタン変化 */
+.wrong-highlight {
+    background-color: #f8d7da !important;
+    border-color: var(--error-color) !important;
+    color: #721c24 !important;
+    opacity: 0.7;
+}
+
+.distractor-info {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    border: 1px solid #ffeeba;
+}
+
+/* =========================================
+   次へ・一覧へボタン (Nav Buttons)
+   ========================================= */
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: opacity 0.2s;
+}
+
+.nav-btn:hover {
+    opacity: 0.9;
+}
+
+.home-btn {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.next-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+/* =========================================
+   スマホ向け調整
+   ========================================= */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+        margin-top: 10px;
+    }
+    
+    .problem-text {
+        font-size: 1rem;
+    }
+    
+    .option-btn {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+}

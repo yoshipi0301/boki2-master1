@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>簿記2級 学習メイト</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <h3>簿記2級 学習メイト</h3>
+</header>
+
+<div class="container">
+    
+    <div id="home-screen" class="screen active-screen">
+        <div class="card">
+            <h2 style="text-align:center; color:var(--primary-color);">問題集メニュー</h2>
+            <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
+                画像を解析し、問題集の数値そのままで<br>アプリ化しました。
+            </p>
+            <div id="chapter-list"></div>
+        </div>
+    </div>
+
+    <div id="problem-screen" class="screen">
+        
+        <button id="back-btn" onclick="goHome()">＜ ホームに戻る</button>
+
+        <div class="card">
+            <div class="problem-meta">
+                <span id="prob-num">Q1</span>
+                <span id="prob-chapter"></span> 
+            </div>
+            
+            <div class="problem-text" id="prob-text">
+                </div>
+            
+            <div class="option-container" id="options-area">
+                </div>
+
+            <button id="answer-btn" class="btn" disabled onclick="submitAnswer()">回答を確認する</button>
+
+            <div id="result-section">
+                <div class="explanation-box">
+                    <strong style="color:var(--primary-color);">【解説】</strong><br>
+                    <span id="main-explanation"></span>
+                </div>
+
+                <div id="distractor-feedback" class="distractor-info" style="display:none;"></div>
+
+                <div class="nav-buttons">
+                    <button class="nav-btn home-btn" onclick="goHome()">一覧へ</button>
+                    <button class="nav-btn next-btn" onclick="goNext()">次へ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="data_ch1.js"></script>
+<script src="data_ch2.js"></script>
+<script src="data_ch3.js"></script>
+<script src="data_ch4.js"></script>
+<script src="data_ch5.js"></script>
+<script src="data_ch6.js"></script>
+<script src="data_ch7.js"></script>
+<script src="data_ch8.js"></script>
+<script src="data_ch9.js"></script>
+<script src="data_ch10.js"></script>
+<script src="data_ch11.js"></script>
+<script src="data_ch12.js"></script>
+<script src="data_ch13.js"></script>
+<script src="data_ch14.js"></script>
+<script src="data_ch15.js"></script>
+
+<script src="script.js"></script>
+
+</body>
+</html>
