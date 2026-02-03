@@ -1,5 +1,5 @@
 // ==========================================
-//  簿記2級アプリ メインコントローラー (復習機能付き)
+//  簿記2級アプリ メインコントローラー (シャッフル対応版)
 // ==========================================
 
 // データの読み込み
@@ -43,8 +43,8 @@ const chapters = [
 let currentChapterId = null;
 let currentProblemIndex = 0;
 let selectedOptionIndex = null;
-let isReviewMode = false; // ★復習モードかどうかのフラグ
-let reviewQueue = [];     // ★復習する問題のリスト
+let isReviewMode = false;
+let reviewQueue = [];
 
 // LocalStorageのキー
 const LS_KEY = 'boki2_wrong_list';
@@ -56,13 +56,22 @@ window.onload = function() {
 };
 
 // ==========================================
+//  ユーティリティ：配列シャッフル (新規追加)
+// ==========================================
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// ==========================================
 //  復習機能（LocalStorage操作）
 // ==========================================
 
-// 間違えた問題を保存する
 function saveWrongAnswer(chapId, probIndex) {
     let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
-    // 重複チェック（既にリストにあるか？）
     const exists = list.some(item => item.c === chapId && item.i === probIndex);
     if (!exists) {
         list.push({ c: chapId, i: probIndex, date: new Date().getTime() });
@@ -71,7 +80,6 @@ function saveWrongAnswer(chapId, probIndex) {
     }
 }
 
-// 正解したのでリストから削除する
 function removeWrongAnswer(chapId, probIndex) {
     let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
     const newList = list.filter(item => !(item.c === chapId && item.i === probIndex));
@@ -79,13 +87,11 @@ function removeWrongAnswer(chapId, probIndex) {
     updateReviewButton();
 }
 
-// 復習ボタンの件数更新
 function updateReviewButton() {
     let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
     const btn = document.getElementById('review-mode-btn');
     if(btn) {
         btn.innerText = `🔥 復習モード (${list.length}問)`;
-        // 0問ならグレーアウト、あればオレンジ
         btn.style.backgroundColor = list.length > 0 ? '#e67e22' : '#bdc3c7';
         btn.disabled = list.length === 0;
     }
@@ -112,7 +118,6 @@ function renderChapterList() {
     });
 }
 
-// 復習画面を開く
 function openReviewScreen() {
     const list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
     if(list.length === 0) return;
@@ -121,14 +126,12 @@ function openReviewScreen() {
     const container = document.getElementById('review-list');
     container.innerHTML = "";
 
-    list.forEach((item, index) => {
-        // 問題データを取得
+    list.forEach((item) => {
         const prob = problemsDB[item.c][item.i];
         const chapTitle = chapters.find(c => c.id === item.c).title;
 
         const div = document.createElement('div');
         div.className = "review-item";
-        // 問題文の冒頭を表示
         const preview = prob.text.split('\n')[0].substring(0, 40) + "...";
         
         div.innerHTML = `
@@ -140,7 +143,6 @@ function openReviewScreen() {
     });
 }
 
-// 通常チャプター開始
 function startChapter(chapId) {
     isReviewMode = false;
     currentChapterId = chapId;
@@ -149,15 +151,15 @@ function startChapter(chapId) {
     loadProblem();
 }
 
-// 復習問題の開始（1問だけ解くモード）
 function startReviewProblem(chapId, probIndex) {
     isReviewMode = true;
     currentChapterId = chapId;
-    currentProblemIndex = probIndex; // ピンポイントで指定
+    currentProblemIndex = probIndex;
     showScreen('problem-screen');
     loadProblem();
 }
 
+// 問題読み込み・表示処理 (ここを修正)
 function loadProblem() {
     const problems = problemsDB[currentChapterId];
     const problem = problems[currentProblemIndex];
@@ -168,7 +170,7 @@ function loadProblem() {
     answerBtn.disabled = true;
     answerBtn.style.display = 'block';
     
-    // 復習モードなら表記を変える
+    // ヘッダー表示制御
     if (isReviewMode) {
         document.getElementById('prob-num').innerText = "🔥 復習中";
         document.getElementById('prob-chapter').innerText = "苦手を克服しよう！";
@@ -182,80 +184,59 @@ function loadProblem() {
     
     const optionsArea = document.getElementById('options-area');
     optionsArea.innerHTML = "";
-    problem.options.forEach((optText, idx) => {
+
+    // ★修正ポイント: 選択肢に「元の番号」を付与してシャッフルする
+    // 元の配列: ["正解", "誤答1", "誤答2"...] 
+    // mapped: [{text:"正解", originalIndex:0}, {text:"誤答1", originalIndex:1}...]
+    const indexedOptions = problem.options.map((opt, index) => ({ 
+        text: opt, 
+        originalIndex: index 
+    }));
+
+    // シャッフル実行
+    shuffleArray(indexedOptions);
+
+    // シャッフルされた順序でボタンを生成
+    indexedOptions.forEach((optObj) => {
         const btn = document.createElement('div');
         btn.className = "option-btn";
-        btn.innerText = optText;
-        btn.onclick = () => selectOption(idx, btn);
-        btn.id = `opt-${idx}`;
+        btn.innerText = optObj.text;
+        
+        // 重要: 選択時には「元のインデックス(originalIndex)」を渡す
+        btn.onclick = () => selectOption(optObj.originalIndex, btn);
+        
+        // 重要: IDには「元のインデックス」を含める (判定時に探せるようにする)
+        btn.id = `opt-orig-${optObj.originalIndex}`;
+        
         optionsArea.appendChild(btn);
     });
 }
 
-function selectOption(idx, btnElement) {
+// 選択処理
+function selectOption(originalIndex, btnElement) {
     if(document.getElementById('result-section').style.display === 'block') return;
-    selectedOptionIndex = idx;
+    
+    // 選んだ選択肢の「元の番号」を保存
+    selectedOptionIndex = originalIndex;
+    
     document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
     btnElement.classList.add('selected');
     document.getElementById('answer-btn').disabled = false;
 }
 
+// 回答送信処理
 function submitAnswer() {
     const problem = problemsDB[currentChapterId][currentProblemIndex];
+    // 正誤判定 (選んだ元の番号 == データ上の正解番号)
     const isCorrect = (selectedOptionIndex === problem.correctIndex);
     
     document.getElementById('answer-btn').style.display = 'none';
     document.getElementById('result-section').style.display = 'block';
     document.getElementById('main-explanation').innerText = problem.explanation;
     
-    const correctBtn = document.getElementById(`opt-${problem.correctIndex}`);
-    correctBtn.classList.add('correct-highlight');
-    correctBtn.innerHTML += ' <span style="float:right; font-weight:bold;">⭕ 正解</span>';
-    
-    // ★ここが学習履歴の肝★
-    if (!isCorrect) {
-        // 間違えたらリストに追加
-        const wrongBtn = document.getElementById(`opt-${selectedOptionIndex}`);
-        wrongBtn.classList.add('wrong-highlight');
-        wrongBtn.innerHTML += ' <span style="float:right; font-weight:bold;">❌</span>';
-        
-        saveWrongAnswer(currentChapterId, currentProblemIndex); // 保存！
-    } else {
-        // 復習モードで正解したらリストから削除
-        if (isReviewMode) {
-            removeWrongAnswer(currentChapterId, currentProblemIndex); // 削除！
-            alert("ナイス！苦手リストから削除しました🎉");
-        }
+    // ★修正ポイント: シャッフルされていても「元の正解番号」を持つボタンを探して緑にする
+    const correctBtn = document.getElementById(`opt-orig-${problem.correctIndex}`);
+    if(correctBtn) {
+        correctBtn.classList.add('correct-highlight');
+        correctBtn.innerHTML += ' <span style="float:right; font-weight:bold;">⭕ 正解</span>';
     }
-    
-    // ボタンの文字制御
-    const nextBtn = document.querySelector('.next-btn');
-    if (isReviewMode) {
-        nextBtn.innerText = "復習リストへ戻る";
-        nextBtn.onclick = openReviewScreen; // リストに戻る
-    } else {
-        nextBtn.innerText = "次へ";
-        nextBtn.onclick = goNext; // 通常の次へ
-    }
-}
-
-function goNext() {
-    if (currentProblemIndex + 1 < problemsDB[currentChapterId].length) {
-        currentProblemIndex++;
-        loadProblem();
-    } else {
-        alert("チャプター完了！お疲れ様でした。");
-        goHome();
-    }
-}
-
-function goHome() {
-    updateReviewButton(); // 件数を最新にする
-    showScreen('home-screen');
-}
-
-function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-    document.getElementById(id).classList.add('active-screen');
-    window.scrollTo(0, 0);
-}
