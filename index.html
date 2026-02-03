@@ -17,10 +17,29 @@
     <div id="home-screen" class="screen active-screen">
         <div class="card">
             <h2 style="text-align:center; color:var(--primary-color);">問題集メニュー</h2>
+            
+            <div style="margin-bottom: 20px; text-align: center;">
+                <button id="review-mode-btn" class="btn" style="background-color: #bdc3c7;" disabled onclick="openReviewScreen()">
+                    🔥 復習モード (0問)
+                </button>
+            </div>
+
             <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
                 画像を解析し、問題集の数値そのままで<br>アプリ化しました。
             </p>
             <div id="chapter-list"></div>
+        </div>
+    </div>
+
+    <div id="review-screen" class="screen">
+        <button id="back-from-review" style="background:transparent; border:none; color:#7f8c8d; cursor:pointer; margin-bottom:10px;" onclick="goHome()">＜ ホームに戻る</button>
+        <div class="card">
+            <h2 style="text-align:center; color:#e67e22;">復習リスト</h2>
+            <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
+                一度間違えた問題がここに溜まります。<br>正解するとリストから消えます。
+            </p>
+            <div id="review-list">
+                </div>
         </div>
     </div>
 
