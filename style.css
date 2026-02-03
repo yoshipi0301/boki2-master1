@@ -301,3 +301,43 @@ header h3 {
         padding: 12px;
     }
 }
+
+/* style.css の末尾に追加 */
+
+/* 復習リストのアイテム */
+.review-item {
+    background: #fff;
+    border-left: 5px solid #e67e22; /* オレンジ色の線 */
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.review-item:hover {
+    transform: translateX(5px);
+    background-color: #fdf2e9;
+}
+
+.review-chapter-tag {
+    font-size: 0.8rem;
+    color: #999;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.review-text-preview {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+/* 復習リストが空の時のメッセージ */
+.empty-message {
+    text-align: center;
+    padding: 30px;
+    color: #bdc3c7;
+    font-weight: bold;
+}
