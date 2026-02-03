@@ -32,7 +32,7 @@
     </div>
 
     <div id="review-screen" class="screen">
-        <button id="back-from-review" style="background:transparent; border:none; color:#7f8c8d; cursor:pointer; margin-bottom:10px;" onclick="goHome()">＜ ホームに戻る</button>
+        <button class="back-link-btn" onclick="goHome()">＜ ホームに戻る</button>
         <div class="card">
             <h2 style="text-align:center; color:#e67e22;">復習リスト</h2>
             <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
@@ -45,7 +45,7 @@
 
     <div id="problem-screen" class="screen">
         
-        <button id="back-btn" onclick="goHome()">＜ ホームに戻る</button>
+        <button class="back-link-btn" onclick="goHome()">＜ ホームに戻る</button>
 
         <div class="card">
             <div class="problem-meta">
@@ -66,8 +66,6 @@
                     <strong style="color:var(--primary-color);">【解説】</strong><br>
                     <span id="main-explanation"></span>
                 </div>
-
-                <div id="distractor-feedback" class="distractor-info" style="display:none;"></div>
 
                 <div class="nav-buttons">
                     <button class="nav-btn home-btn" onclick="goHome()">一覧へ</button>
