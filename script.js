@@ -1,99 +1,275 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>簿記2級 学習メイト</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+// ==========================================
+//  簿記2級アプリ メインコントローラー (最終完全版)
+// ==========================================
 
-<header>
-    <h3>簿記2級 学習メイト</h3>
-</header>
+// データの読み込み (存在チェック付き)
+const problemsDB = {
+    1: typeof data_ch1 !== 'undefined' ? data_ch1 : [],
+    2: typeof data_ch2 !== 'undefined' ? data_ch2 : [],
+    3: typeof data_ch3 !== 'undefined' ? data_ch3 : [],
+    4: typeof data_ch4 !== 'undefined' ? data_ch4 : [],
+    5: typeof data_ch5 !== 'undefined' ? data_ch5 : [],
+    6: typeof data_ch6 !== 'undefined' ? data_ch6 : [],
+    7: typeof data_ch7 !== 'undefined' ? data_ch7 : [],
+    8: typeof data_ch8 !== 'undefined' ? data_ch8 : [],
+    9: typeof data_ch9 !== 'undefined' ? data_ch9 : [],
+    10: typeof data_ch10 !== 'undefined' ? data_ch10 : [],
+    11: typeof data_ch11 !== 'undefined' ? data_ch11 : [],
+    12: typeof data_ch12 !== 'undefined' ? data_ch12 : [],
+    13: typeof data_ch13 !== 'undefined' ? data_ch13 : [],
+    14: typeof data_ch14 !== 'undefined' ? data_ch14 : [],
+    15: typeof data_ch15 !== 'undefined' ? data_ch15 : []
+};
 
-<div class="container">
+const chapters = [
+    { id: 1, title: "Chapter 1: 商品売買" },
+    { id: 2, title: "Chapter 2: 現金預金" },
+    { id: 3, title: "Chapter 3: 手形・電子記録債権" },
+    { id: 4, title: "Chapter 4: 有価証券" },
+    { id: 5, title: "Chapter 5: その他の債権・債務" },
+    { id: 6, title: "Chapter 6: 固定資産" },
+    { id: 7, title: "Chapter 7: リース取引" },
+    { id: 8, title: "Chapter 8: 外貨建取引" },
+    { id: 9, title: "Chapter 9: 税金" },
+    { id: 10, title: "Chapter 10: 引当金" },
+    { id: 11, title: "Chapter 11: 決算・財務諸表" },
+    { id: 12, title: "Chapter 12: 本支店会計" },
+    { id: 13, title: "Chapter 13: 連結会計 (基本)" },
+    { id: 14, title: "Chapter 14: 連結会計 (応用)" },
+    { id: 15, title: "Chapter 15: 製造業会計・模試" }
+];
+
+// 制御変数
+let currentChapterId = null;
+let currentProblemIndex = 0;
+let selectedOptionIndex = null;
+let isReviewMode = false;
+
+// LocalStorageキー
+const LS_KEY = 'boki2_wrong_list';
+
+// 初期化
+window.onload = function() {
+    renderChapterList();
+    updateReviewButton();
+};
+
+// ==========================================
+//  ユーティリティ：配列シャッフル
+// ==========================================
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// ==========================================
+//  復習機能（LocalStorage操作）
+// ==========================================
+function saveWrongAnswer(chapId, probIndex) {
+    let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
+    const exists = list.some(item => item.c === chapId && item.i === probIndex);
+    if (!exists) {
+        list.push({ c: chapId, i: probIndex, date: new Date().getTime() });
+        localStorage.setItem(LS_KEY, JSON.stringify(list));
+        updateReviewButton();
+    }
+}
+
+function removeWrongAnswer(chapId, probIndex) {
+    let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
+    const newList = list.filter(item => !(item.c === chapId && item.i === probIndex));
+    localStorage.setItem(LS_KEY, JSON.stringify(newList));
+    updateReviewButton();
+}
+
+function updateReviewButton() {
+    let list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
+    const btn = document.getElementById('review-mode-btn');
+    if(btn) {
+        btn.innerText = `🔥 復習モード (${list.length}問)`;
+        btn.style.backgroundColor = list.length > 0 ? '#e67e22' : '#bdc3c7';
+        btn.disabled = list.length === 0;
+    }
+}
+
+// ==========================================
+//  画面制御
+// ==========================================
+function renderChapterList() {
+    const list = document.getElementById('chapter-list');
+    if(!list) return;
+    list.innerHTML = "";
+    chapters.forEach(chap => {
+        const isReady = problemsDB[chap.id] && problemsDB[chap.id].length > 0;
+        const div = document.createElement('div');
+        div.className = "chapter-item";
+        let statusBadge = isReady 
+            ? `<span class="badge" style="background:var(--success-color);">学習可能</span>` 
+            : `<span class="badge" style="background:#bdc3c7;">準備中</span>`;
+        div.innerHTML = `<span>${chap.title} ${statusBadge}</span> <span>▶</span>`;
+        div.onclick = () => { if(isReady) startChapter(chap.id); };
+        list.appendChild(div);
+    });
+}
+
+function openReviewScreen() {
+    const list = JSON.parse(localStorage.getItem(LS_KEY)) || [];
+    if(list.length === 0) return;
+
+    showScreen('review-screen');
+    const container = document.getElementById('review-list');
+    container.innerHTML = "";
+
+    list.forEach((item) => {
+        const prob = problemsDB[item.c][item.i];
+        const chapTitle = chapters.find(c => c.id === item.c).title;
+        const div = document.createElement('div');
+        div.className = "review-item";
+        const preview = prob.text.split('\n')[0].substring(0, 40) + "...";
+        div.innerHTML = `
+            <span class="review-chapter-tag">${chapTitle}</span>
+            <span class="review-text-preview">${preview}</span>
+        `;
+        div.onclick = () => startReviewProblem(item.c, item.i);
+        container.appendChild(div);
+    });
+}
+
+function startChapter(chapId) {
+    isReviewMode = false;
+    currentChapterId = chapId;
+    currentProblemIndex = 0;
+    showScreen('problem-screen');
+    loadProblem();
+}
+
+function startReviewProblem(chapId, probIndex) {
+    isReviewMode = true;
+    currentChapterId = chapId;
+    currentProblemIndex = probIndex;
+    showScreen('problem-screen');
+    loadProblem();
+}
+
+// 問題の読み込みと表示（シャッフルロジック含む）
+function loadProblem() {
+    const problems = problemsDB[currentChapterId];
+    const problem = problems[currentProblemIndex];
+    selectedOptionIndex = null;
     
-    <div id="home-screen" class="screen active-screen">
-        <div class="card">
-            <h2 style="text-align:center; color:var(--primary-color);">問題集メニュー</h2>
-            
-            <div style="margin-bottom: 20px; text-align: center;">
-                <button id="review-mode-btn" class="btn" style="background-color: #bdc3c7;" disabled onclick="openReviewScreen()">
-                    🔥 復習モード (0問)
-                </button>
-            </div>
+    document.getElementById('result-section').style.display = 'none';
+    const answerBtn = document.getElementById('answer-btn');
+    answerBtn.disabled = true;
+    answerBtn.style.display = 'block';
+    
+    if (isReviewMode) {
+        document.getElementById('prob-num').innerText = "🔥 復習中";
+        document.getElementById('prob-chapter').innerText = "苦手を克服しよう！";
+    } else {
+        document.getElementById('prob-num').innerText = `Q${currentProblemIndex + 1} / ${problems.length}`;
+        const chap = chapters.find(c => c.id === currentChapterId);
+        document.getElementById('prob-chapter').innerText = chap ? chap.title : "";
+    }
 
-            <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
-                画像を解析し、問題集の数値そのままで<br>アプリ化しました。
-            </p>
-            <div id="chapter-list"></div>
-        </div>
-    </div>
+    document.getElementById('prob-text').innerText = problem.text;
+    
+    const optionsArea = document.getElementById('options-area');
+    optionsArea.innerHTML = "";
 
-    <div id="review-screen" class="screen">
-        <button class="back-link-btn" onclick="goHome()">＜ ホームに戻る</button>
-        <div class="card">
-            <h2 style="text-align:center; color:#e67e22;">復習リスト</h2>
-            <p style="text-align:center; font-size:0.9rem; color:#7f8c8d;">
-                一度間違えた問題がここに溜まります。<br>正解するとリストから消えます。
-            </p>
-            <div id="review-list">
-                </div>
-        </div>
-    </div>
+    // 選択肢に「元の番号」を付与してシャッフル
+    const indexedOptions = problem.options.map((opt, index) => ({ 
+        text: opt, 
+        originalIndex: index 
+    }));
 
-    <div id="problem-screen" class="screen">
+    shuffleArray(indexedOptions);
+
+    indexedOptions.forEach((optObj) => {
+        const btn = document.createElement('div');
+        btn.className = "option-btn";
+        btn.innerText = optObj.text;
         
-        <button class="back-link-btn" onclick="goHome()">＜ ホームに戻る</button>
+        // クリック時に「元の番号」を渡す
+        btn.onclick = () => selectOption(optObj.originalIndex, btn);
+        // IDに「元の番号」を含める
+        btn.id = `opt-orig-${optObj.originalIndex}`;
+        
+        optionsArea.appendChild(btn);
+    });
+}
 
-        <div class="card">
-            <div class="problem-meta">
-                <span id="prob-num">Q1</span>
-                <span id="prob-chapter"></span> 
-            </div>
-            
-            <div class="problem-text" id="prob-text">
-                </div>
-            
-            <div class="option-container" id="options-area">
-                </div>
+function selectOption(originalIndex, btnElement) {
+    if(document.getElementById('result-section').style.display === 'block') return;
+    
+    selectedOptionIndex = originalIndex;
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btnElement.classList.add('selected');
+    document.getElementById('answer-btn').disabled = false;
+}
 
-            <button id="answer-btn" class="btn" disabled onclick="submitAnswer()">回答を確認する</button>
+function submitAnswer() {
+    const problem = problemsDB[currentChapterId][currentProblemIndex];
+    // 正誤判定
+    const isCorrect = (selectedOptionIndex === problem.correctIndex);
+    
+    document.getElementById('answer-btn').style.display = 'none';
+    document.getElementById('result-section').style.display = 'block';
+    document.getElementById('main-explanation').innerText = problem.explanation;
+    
+    // 正解のボタンを緑にする
+    const correctBtn = document.getElementById(`opt-orig-${problem.correctIndex}`);
+    if(correctBtn) {
+        correctBtn.classList.add('correct-highlight');
+        correctBtn.innerHTML += ' <span style="float:right; font-weight:bold;">⭕ 正解</span>';
+    }
+    
+    if (!isCorrect) {
+        // 間違えたボタンを赤にする
+        const wrongBtn = document.getElementById(`opt-orig-${selectedOptionIndex}`);
+        if(wrongBtn) {
+            wrongBtn.classList.add('wrong-highlight');
+            wrongBtn.innerHTML += ' <span style="float:right; font-weight:bold;">❌</span>';
+        }
+        // 間違いリストに追加
+        saveWrongAnswer(currentChapterId, currentProblemIndex);
+    } else {
+        // 復習モードで正解ならリストから削除
+        if (isReviewMode) {
+            removeWrongAnswer(currentChapterId, currentProblemIndex);
+            alert("ナイス！苦手リストから削除しました🎉");
+        }
+    }
+    
+    const nextBtn = document.querySelector('.next-btn');
+    if (isReviewMode) {
+        nextBtn.innerText = "復習リストへ戻る";
+        nextBtn.onclick = openReviewScreen;
+    } else {
+        nextBtn.innerText = "次へ";
+        nextBtn.onclick = goNext;
+    }
+}
 
-            <div id="result-section">
-                <div class="explanation-box">
-                    <strong style="color:var(--primary-color);">【解説】</strong><br>
-                    <span id="main-explanation"></span>
-                </div>
+function goNext() {
+    if (currentProblemIndex + 1 < problemsDB[currentChapterId].length) {
+        currentProblemIndex++;
+        loadProblem();
+    } else {
+        alert("チャプター完了！お疲れ様でした。");
+        goHome();
+    }
+}
 
-                <div class="nav-buttons">
-                    <button class="nav-btn home-btn" onclick="goHome()">一覧へ</button>
-                    <button class="nav-btn next-btn" onclick="goNext()">次へ</button>
-                </div>
-            </div>
-        </div>
-    </div>
+function goHome() {
+    updateReviewButton();
+    showScreen('home-screen');
+}
 
-</div>
-
-<script src="data_ch1.js"></script>
-<script src="data_ch2.js"></script>
-<script src="data_ch3.js"></script>
-<script src="data_ch4.js"></script>
-<script src="data_ch5.js"></script>
-<script src="data_ch6.js"></script>
-<script src="data_ch7.js"></script>
-<script src="data_ch8.js"></script>
-<script src="data_ch9.js"></script>
-<script src="data_ch10.js"></script>
-<script src="data_ch11.js"></script>
-<script src="data_ch12.js"></script>
-<script src="data_ch13.js"></script>
-<script src="data_ch14.js"></script>
-<script src="data_ch15.js"></script>
-
-<script src="script.js"></script>
-
-</body>
-</html>
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+    document.getElementById(id).classList.add('active-screen');
+    window.scrollTo(0, 0);
+}
